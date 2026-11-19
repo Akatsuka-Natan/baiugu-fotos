@@ -75,7 +75,7 @@ window.bgPublish = async () => {
 window.bgRun = async (code) => {
   const L = (bgData || []).find(x => x.c === code);
   if (!location.pathname.endsWith('/product/new')) {
-    const a = [...document.querySelectorAll('a')].find(a => /\/portal\/product\/new\/?$/.test(a.getAttribute('href') || ''));
+    const a = [...document.querySelectorAll('a')].find(a => /\/portal\/product\/new(\?|\/?$)/.test(a.getAttribute('href') || ''));
     if (a) a.click(); else return 'NO_NEW_LINK';
     await waitFor(() => document.querySelector('input[type=file][accept="image/*"]') && document.querySelector('input[placeholder^="Nome da marca"]'), 15000);
     await sleep(1500);
