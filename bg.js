@@ -44,8 +44,8 @@ window.bgStep2 = async (code) => {
   if (!curCat.includes(want)) { const rec = leaf('Moda Infantil > ' + want)[0]; if (rec) { rec.click(); await sleep(1500); r.push('catfix'); } else r.push('CAT_MISMATCH want ' + want); }
   await waitFor(() => item('Descrição do produto'), 10000);
   await sleep(1500);
-  const v1 = leaf('Variação1')[0];
-  if (v1) { let c = v1; for (let k = 0; k < 4; k++) c = c.parentElement; const x = [...c.querySelectorAll('i,svg,button,span')].find(e => /close|delete|remove/i.test((e.className && e.className.baseVal !== undefined ? e.className.baseVal : e.className) + '')); if (x) { (x.closest('button,i,span') || x).dispatchEvent(new MouseEvent('click', { bubbles: true })); await sleep(1200); } r.push(leaf('Variação1')[0] ? 'VARIATION_STILL' : 'var-removed'); }
+  for (let k = 0; k < 3 && document.querySelector('.variation-delete-btn'); k++) { document.querySelector('.variation-delete-btn').click(); await sleep(1500); }
+  if (document.querySelector('.variation-delete-btn')) r.push('VARIATION_STILL'); 
   const g = leaf('Item sem GTIN')[0]; if (g) { const cb = g.closest('label') || g; const ci = cb.querySelector('input'); if (!ci || !ci.checked) cb.click(); }
   r.push(await pickSelect('Marca', 'Sem marca'));
   const q = document.querySelector('.ql-container').__quill; q.setText(L.desc);
