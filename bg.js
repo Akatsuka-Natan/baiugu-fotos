@@ -72,5 +72,30 @@ window.bgPublish = async () => {
   const errs = [...document.querySelectorAll('.eds-form-item__extra, [class*=error]')].map(e => e.innerText.trim()).filter(Boolean);
   return 'FAIL ' + JSON.stringify(errs.slice(0, 8));
 };
+window.bgRun = async (code) => {
+  const L = (bgData || []).find(x => x.c === code);
+  if (!location.pathname.endsWith('/product/new')) {
+    const a = [...document.querySelectorAll('a')].find(a => /\/portal\/product\/new\/?$/.test(a.getAttribute('href') || ''));
+    if (a) a.click(); else return 'NO_NEW_LINK';
+    await waitFor(() => document.querySelector('input[type=file][accept="image/*"]') && document.querySelector('input[placeholder^="Nome da marca"]'), 15000);
+    await sleep(1500);
+  }
+  const s1 = await bgStep1(code);
+  if (!s1.endsWith('ok')) return s1;
+  const s2 = await bgStep2(code);
+  const L2 = bgData.find(x => x.c === code);
+  const want = L2.cat === 'Vestido feminino' ? 'Vestidos' : L2.cat === 'Conjunto masculino' ? 'Roupas de Meninos' : 'Roupas de Meninas > Trajes';
+  const cat = (item('Categoria')?.innerText || '');
+  const bad = [];
+  if (!cat.split('\n').find(x => x.includes('>') )?.includes(want)) bad.push('cat');
+  if (/VARIATION_STILL|noitem|noopt|CAT_MISMATCH/.test(s2)) bad.push('s2');
+  if (!s2.includes(L2.price.toFixed(2).replace('.', ','))) bad.push('price');
+  if (document.querySelector('.ql-container').__quill.getText().length < 100) bad.push('desc');
+  await sleep(1000);
+  const sw = document.querySelector('.eds-switch'); if (!sw || !/open/.test(sw.className)) bad.push('ship');
+  if (bad.length) return 'HOLD ' + code + ' ' + bad.join(',') + ' :: ' + s2;
+  const p = await bgPublish();
+  return code + ' ' + p + ' :: ' + (cat.split('\n').find(x => x.includes('>')) || '');
+};
 return 'loaded';
 })()
