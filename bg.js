@@ -25,9 +25,14 @@ window.bgStep1 = async (code) => {
   setVal(name, L.title);
   await waitFor(() => document.querySelectorAll('.shopee-image-manager__itembox, [class*=image-item]').length >= 6 || null, 8000);
   await sleep(800);
-  const ns = [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Next Step');
-  if (ns) ns.click();
-  return 'step1 ' + code;
+  for (let k = 0; k < 20; k++) {
+    const ns = [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Next Step');
+    if (!ns) break;
+    if (!ns.disabled && !/disabled/.test(ns.className)) ns.click();
+    await sleep(1000);
+  }
+  const done = await waitFor(() => item('Descrição do produto'), 15000);
+  return 'step1 ' + code + (done ? ' ok' : ' NEXT_FAIL');
 };
 window.bgStep2 = async (code) => {
   const L = bgData.find(x => x.c === code);
@@ -38,6 +43,9 @@ window.bgStep2 = async (code) => {
   r.push('cat=' + curCat);
   if (!curCat.includes(want)) { const rec = leaf('Moda Infantil > ' + want)[0]; if (rec) { rec.click(); await sleep(1500); r.push('catfix'); } else r.push('CAT_MISMATCH want ' + want); }
   await waitFor(() => item('Descrição do produto'), 10000);
+  await sleep(1500);
+  const v1 = leaf('Variação1')[0];
+  if (v1) { let c = v1; for (let k = 0; k < 4; k++) c = c.parentElement; const x = [...c.querySelectorAll('i,svg,button,span')].find(e => /close|delete|remove/i.test((e.className && e.className.baseVal !== undefined ? e.className.baseVal : e.className) + '')); if (x) { (x.closest('button,i,span') || x).dispatchEvent(new MouseEvent('click', { bubbles: true })); await sleep(1200); } r.push(leaf('Variação1')[0] ? 'VARIATION_STILL' : 'var-removed'); }
   const g = leaf('Item sem GTIN')[0]; if (g) { const cb = g.closest('label') || g; const ci = cb.querySelector('input'); if (!ci || !ci.checked) cb.click(); }
   r.push(await pickSelect('Marca', 'Sem marca'));
   const q = document.querySelector('.ql-container').__quill; q.setText(L.desc);
